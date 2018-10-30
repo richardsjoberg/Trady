@@ -37,7 +37,7 @@ namespace Trady.Importer.AlphaVantageFx
         /// Imports the async. endTime stock history inclusive
         /// </summary>
         /// <returns>The async.</returns>
-        /// <param name="symbol">Symbol.</param>
+        /// <param name="symbol">Symbol. 3 char from currency and 3 char to currency e.g. EURUSD</param>
         /// <param name="startTime">Start time.</param>
         /// <param name="endTime">End time.</param>
         /// <param name="period">Period.</param>
@@ -48,46 +48,49 @@ namespace Trady.Importer.AlphaVantageFx
             {
                 throw new ArgumentException($"This importer does not support {period.ToString()}");
             }
-            
+
+            var fromSymbol = symbol.Substring(0,3);
+            var toSymbol = symbol.Substring(2, 3);
+
             Client.BaseAddress = new Uri("https://www.alphavantage.co");
             string query = string.Empty;            
-            string function = "TIME_SERIES_DAILY";
+            string function = "FX_DAILY";
             string format = "yyyy-MM-dd";
             switch(period)
             {
                 case PeriodOption.PerMinute:
                     format = "yyyy-MM-dd HH:mm:ss";
-                    function = "function=TIME_SERIES_INTRADAY&interval=1min";                    
+                    function = "function=FX_INTRADAY&interval=1min";                    
                     break;
                 case PeriodOption.Per5Minute:
                     format = "yyyy-MM-dd HH:mm:ss";
-                    function = "function=TIME_SERIES_INTRADAY&interval=5min";                    
+                    function = "function=FX_INTRADAY&interval=5min";                    
                     break;
                 case PeriodOption.Per15Minute:
                     format = "yyyy-MM-dd HH:mm:ss";
-                    function = "function=TIME_SERIES_INTRADAY&interval=15min";
+                    function = "function=FX_INTRADAY&interval=15min";
                     break;
                 case PeriodOption.Per30Minute:
                     format = "yyyy-MM-dd HH:mm:ss";
-                    function = "function=TIME_SERIES_INTRADAY&interval=30min";
+                    function = "function=FX_INTRADAY&interval=30min";
                     break;
                 case PeriodOption.Hourly:
                     format = "yyyy-MM-dd HH:mm:ss";
-                    function = "function=TIME_SERIES_INTRADAY&interval=60min";
+                    function = "function=FX_INTRADAY&interval=60min";
                     break;
                 case PeriodOption.Daily:
-                    function = "function=TIME_SERIES_DAILY";
+                    function = "function=FX_DAILY";
                     break;
                 case PeriodOption.Weekly:
-                    function = "function=TIME_SERIES_WEEKLY";
+                    function = "function=FX_WEEKLY";
                     break;
                 case PeriodOption.Monthly:
-                    function = "function=TIME_SERIES_MONTHLY";
+                    function = "function=FX_MONTHLY";
                     break;
                 default:
                     break;
             }
-            query = $"/query?{function}&symbol={symbol}&apikey={ApiKey}&outputsize={OutputSize.ToString()}&datatype=csv";
+            query = $"/query?{function}&from_symbol={fromSymbol}&to_symbol={toSymbol}&apikey={ApiKey}&outputsize={OutputSize.ToString()}&datatype=csv";
             var csvStream = await client.GetStreamAsync(query);
             
             TextReader textReader = new StreamReader(csvStream);
