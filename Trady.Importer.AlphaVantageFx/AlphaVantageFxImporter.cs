@@ -50,7 +50,7 @@ namespace Trady.Importer.AlphaVantageFx
             }
 
             var fromSymbol = symbol.Substring(0,3);
-            var toSymbol = symbol.Substring(2, 3);
+            var toSymbol = symbol.Substring(3, 3);
 
             Client.BaseAddress = new Uri("https://www.alphavantage.co");
             string query = string.Empty;            
@@ -110,9 +110,10 @@ namespace Trady.Importer.AlphaVantageFx
                     }
 
                     var date = string.IsNullOrWhiteSpace(format) ? csvReader.GetField<DateTime>(0) : DateTime.ParseExact(csvReader.GetField<string>(0), format, cultureInfo);
+                    date = date.AddHours((DateTime.Now.AddSeconds(1) - DateTime.UtcNow).Hours);
                     if((!startTime.HasValue || date >= startTime) && (!endTime.HasValue || date <= endTime))
                     {
-                        candles.Add(GetRecord(csvReader, format, cultureInfo));
+                        candles.Add(GetRecord(csvReader, format, cultureInfo, date));
                     }
                 }                
             }
@@ -120,16 +121,16 @@ namespace Trady.Importer.AlphaVantageFx
             return candles.OrderBy(c => c.DateTime).ToList();
         }
 
-        public IOhlcv GetRecord(CsvReader csv, string format, CultureInfo culture)
+        public IOhlcv GetRecord(CsvReader csv, string format, CultureInfo culture, DateTime date)
         {
             // By using GetField Methodo of the CSV Reader Culture Info set in the configuration is used
             return new Candle(
-                string.IsNullOrWhiteSpace(format) ? csv.GetField<DateTime>(0) : DateTime.ParseExact(csv.GetField<string>(0), format, culture),
+                date,
                 csv.GetField<Decimal>(1),
                 csv.GetField<Decimal>(2),
                 csv.GetField<Decimal>(3),
                 csv.GetField<Decimal>(4),
-                csv.GetField<Decimal>(5)
+                0
             );
         }
 
